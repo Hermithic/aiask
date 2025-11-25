@@ -1,0 +1,18 @@
+Package: aiask
+Version: VERSION
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Hermithic <hermithic@users.noreply.github.com>
+Description: AI-powered command line assistant
+ AIask is an AI-powered command line assistant that converts
+ natural language into shell commands for PowerShell, CMD,
+ Bash, and Zsh.
+ .
+ Features:
+ - Natural language to command conversion
+ - Multiple LLM provider support (Grok, OpenAI, Anthropic, Gemini, Ollama)
+ - Auto-detect current shell
+ - Execute, copy, edit, or re-prompt commands
+Homepage: https://github.com/Hermithic/aiask
+

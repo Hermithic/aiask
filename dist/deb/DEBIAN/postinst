@@ -1,0 +1,22 @@
+#!/bin/bash
+# Post-installation script for aihelp
+
+set -e
+
+# Make binary executable
+chmod +x /usr/local/bin/aihelp
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  AIHelp has been installed successfully!                      ║"
+echo "║                                                               ║"
+echo "║  To get started, run:                                        ║"
+echo "║    aihelp config                                             ║"
+echo "║                                                               ║"
+echo "║  Then try:                                                   ║"
+echo "║    aihelp \"list all files in current directory\"             ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
+echo ""
+
+exit 0
+
