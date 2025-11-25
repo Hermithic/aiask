@@ -25,8 +25,18 @@ What would you like to do?
 
 ### Windows (winget)
 
+> **Note**: Pending approval in winget-pkgs. Track progress: [PR #317048](https://github.com/microsoft/winget-pkgs/pull/317048)
+
 ```powershell
 winget install Hermithic.aiask
+```
+
+**Manual install** (available now):
+```powershell
+# Download from releases
+Invoke-WebRequest -Uri "https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-windows-amd64.zip" -OutFile aiask.zip
+Expand-Archive aiask.zip -DestinationPath .
+Move-Item aiask-windows-amd64.exe C:\Windows\aiask.exe
 ```
 
 ### macOS (Homebrew)
@@ -55,7 +65,7 @@ sudo mv aiask-linux-amd64 /usr/local/bin/aiask
 
 ### From Source
 
-Requires Go 1.21+:
+Requires Go 1.23+:
 
 ```bash
 git clone https://github.com/Hermithic/aiask.git
@@ -180,7 +190,7 @@ The detection uses environment variables (`PSModulePath`, `SHELL`, `COMSPEC`) to
 
 ### Prerequisites
 
-- Go 1.21 or later
+- Go 1.23 or later
 - Make (optional, for using Makefile)
 
 ### Build Commands
@@ -194,9 +204,6 @@ make build-all
 
 # Create release archives
 make release
-
-# Build .deb package
-make deb
 ```
 
 ### Cross-Compilation
