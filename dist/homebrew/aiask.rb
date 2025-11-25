@@ -11,14 +11,14 @@ class Aiask < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-darwin-arm64.tar.gz"
-      sha256 "bf15905a91cc3832450ad24d0fc618f263d220724694e9092d85a5019fed6fd0"
+      sha256 "7139e012d5409c6bc4c3a5ee108b81ca81b34f67be4a8c824cbe6181fd397949"
 
       def install
         bin.install "aiask-darwin-arm64" => "aiask"
       end
     else
       url "https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-darwin-amd64.tar.gz"
-      sha256 "a54a44f8084eb13ee7b904fef330017a9a515664515f56990b1c82e5b44a77f6"
+      sha256 "ddae5cffc58a57bf299ebd914c1b066247a169d16d5e85c848d9b8c1da7f6d7a"
 
       def install
         bin.install "aiask-darwin-amd64" => "aiask"
@@ -29,14 +29,14 @@ class Aiask < Formula
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-linux-arm64.tar.gz"
-      sha256 "31b2a2f18b87091736dce128aab92a710bb229bc38d6ad3a58877735d6f43127"
+      sha256 "eeb767b9362ff28a5cb3831cfc744703ecf084dfab3f490b51368f02ed682848"
 
       def install
         bin.install "aiask-linux-arm64" => "aiask"
       end
     else
       url "https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-linux-amd64.tar.gz"
-      sha256 "4e317cf7e6e41d7a246fe72f7c811dbe0eca7ce731a98d2e542585c72692eeab"
+      sha256 "3382cd4c11214847c87b9fd3d35b58ef6b388026976a3e57907aac2995b228fb"
 
       def install
         bin.install "aiask-linux-amd64" => "aiask"
