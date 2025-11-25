@@ -1,218 +1,247 @@
-# AIask CLI
+# 🤖 AIask
 
-**AI-powered command line assistant** that converts natural language into shell commands for PowerShell, CMD, Bash, and Zsh.
+> **Turn plain English into shell commands instantly!**
+
+[![Release](https://img.shields.io/github/v/release/Hermithic/aiask)](https://github.com/Hermithic/aiask/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+AIask is a command-line assistant that understands what you want to do and gives you the exact shell command. No more googling syntax or reading man pages!
 
 ```
-> aiask "find all files larger than 100MB"
+$ aiask "find all files larger than 100MB"
 
-Suggested command:
-  find . -type f -size +100M
+✨ Suggested command:
+   find . -type f -size +100M
 
 What would you like to do?
   [e]xecute  |  [c]opy  |  e[d]it  |  [r]e-prompt  |  [q]uit
->
+> 
 ```
 
-## Features
+---
 
-- **Natural Language to Command**: Describe what you want in plain English
-- **Multi-Shell Support**: Auto-detects PowerShell, CMD, Bash, Zsh, and Fish
-- **Multiple LLM Providers**: Choose from Grok (xAI), OpenAI, Anthropic Claude, Google Gemini, or local Ollama
-- **Interactive Workflow**: Execute, copy to clipboard, edit, or refine your request
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+## ✨ Features
 
-## Installation
+- 🗣️ **Natural Language** — Just describe what you want in plain English
+- 🐚 **Multi-Shell** — Works with PowerShell, CMD, Bash, Zsh, and Fish
+- 🧠 **Multiple AI Providers** — Grok, OpenAI, Anthropic, Google Gemini, or local Ollama
+- ⚡ **Interactive** — Execute, copy, edit, or refine commands before running
+- 🖥️ **Cross-Platform** — Windows, macOS, and Linux
 
-### Windows (winget)
+---
 
-> **Note**: Pending approval in winget-pkgs. Track progress: [PR #317048](https://github.com/microsoft/winget-pkgs/pull/317048)
+## 📦 Installation
 
+### 🪟 Windows
+
+**Option 1: winget** *(coming soon)*
 ```powershell
 winget install Hermithic.aiask
 ```
 
-**Manual install** (available now):
+**Option 2: Direct download**
 ```powershell
-# Download from releases
-Invoke-WebRequest -Uri "https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-windows-amd64.zip" -OutFile aiask.zip
+# Download the latest release
+Invoke-WebRequest -Uri "https://github.com/Hermithic/aiask/releases/latest/download/aiask-1.0.0-windows-amd64.zip" -OutFile aiask.zip
 Expand-Archive aiask.zip -DestinationPath .
 Move-Item aiask-windows-amd64.exe C:\Windows\aiask.exe
 ```
 
-### macOS (Homebrew)
+### 🍎 macOS
 
 ```bash
 brew tap Hermithic/aiask
 brew install aiask
 ```
 
-### Linux (apt)
+### 🐧 Linux
 
+**Option 1: APT (Debian/Ubuntu)**
 ```bash
 # Add the repository
 echo "deb [trusted=yes] https://hermithic.github.io/aiask/ stable main" | sudo tee /etc/apt/sources.list.d/aiask.list
 
-# Update and install
+# Install
 sudo apt update
 sudo apt install aiask
 ```
 
-### Linux (manual)
-
-Download the binary from the [releases page](https://github.com/Hermithic/aiask/releases):
-
+**Option 2: Download .deb package**
 ```bash
-# Option 1: Download .deb package
-wget https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask_1.0.0_amd64.deb
+wget https://github.com/Hermithic/aiask/releases/latest/download/aiask_1.0.0_amd64.deb
 sudo dpkg -i aiask_1.0.0_amd64.deb
+```
 
-# Option 2: Direct binary
-wget https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-linux-amd64
-chmod +x aiask-linux-amd64
+**Option 3: Direct binary**
+```bash
+wget https://github.com/Hermithic/aiask/releases/latest/download/aiask-1.0.0-linux-amd64.tar.gz
+tar -xzf aiask-1.0.0-linux-amd64.tar.gz
 sudo mv aiask-linux-amd64 /usr/local/bin/aiask
 ```
 
-### From Source
+### 🔧 From Source
 
 Requires Go 1.23+:
-
 ```bash
 git clone https://github.com/Hermithic/aiask.git
 cd aiask
 go build -o aiask ./cmd/aiask
 ```
 
-## Configuration
+---
 
-Before using AIask, configure your LLM provider:
+## ⚙️ Configuration
+
+Before using AIask, set up your AI provider:
 
 ```bash
 aiask config
 ```
 
-This interactive wizard will guide you through:
+This interactive wizard helps you:
 
-1. **Selecting a provider**:
-   - `grok` - xAI Grok (recommended)
-   - `openai` - OpenAI GPT
-   - `anthropic` - Anthropic Claude
-   - `gemini` - Google Gemini
-   - `ollama` - Local LLM (no API key needed)
+1. **Choose a provider:**
+   | Provider | Description | API Key Required |
+   |----------|-------------|------------------|
+   | 🚀 Grok | xAI's Grok (recommended) | Yes |
+   | 🤖 OpenAI | GPT-4o, GPT-4 | Yes |
+   | 🧠 Anthropic | Claude 3.5/4 | Yes |
+   | ✨ Gemini | Google Gemini | Yes |
+   | 🏠 Ollama | Run locally, free! | No |
 
-2. **Entering your API key** (not required for Ollama)
+2. **Enter your API key** (not needed for Ollama)
 
-3. **Selecting a model** (defaults provided)
+3. **Select a model** (defaults provided)
 
-### Getting API Keys
+### 🔑 Getting API Keys
 
-| Provider | Get API Key |
-|----------|-------------|
-| xAI Grok | [console.x.ai](https://console.x.ai/) |
+| Provider | Where to get it |
+|----------|-----------------|
+| Grok | [console.x.ai](https://console.x.ai/) |
 | OpenAI | [platform.openai.com](https://platform.openai.com/api-keys) |
 | Anthropic | [console.anthropic.com](https://console.anthropic.com/) |
-| Google Gemini | [ai.google.dev](https://ai.google.dev/) |
-| Ollama | No key needed - [ollama.ai](https://ollama.ai/) |
+| Gemini | [ai.google.dev](https://ai.google.dev/) |
+| Ollama | No key needed! [ollama.ai](https://ollama.ai/) |
 
-### Using Ollama (Local LLM)
+### 🏠 Using Ollama (100% Local & Free)
 
-For privacy-focused users, AIask supports local LLMs via Ollama:
+For maximum privacy, run AI completely locally:
 
-1. Install Ollama: https://ollama.ai/
-2. Pull a model: `ollama pull llama3.2`
-3. Configure AIask: `aiask config` → select `ollama`
+```bash
+# 1. Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
 
-## Usage
+# 2. Pull a model
+ollama pull llama3.2
+
+# 3. Configure AIask
+aiask config  # Select "ollama"
+```
+
+---
+
+## 🚀 Usage
 
 ### Basic Usage
 
 ```bash
-aiask "your request in natural language"
+aiask "your request in plain English"
 ```
 
-### Examples
+### 📚 Examples
 
+**File Operations:**
 ```bash
-# File operations
 aiask "list all .txt files modified in the last 7 days"
 aiask "find and delete all empty directories"
-aiask "compress the logs folder into a zip file"
+aiask "compress the logs folder into a zip"
+aiask "count lines of code in all Python files"
+```
 
-# System info
+**System Info:**
+```bash
 aiask "show disk usage for each partition"
 aiask "list all running processes sorted by memory"
 aiask "what's my public IP address"
-
-# Git operations
-aiask "undo my last commit but keep the changes"
-aiask "show commits from the last week"
-aiask "create a new branch and switch to it"
-
-# Network
-aiask "list all open ports"
-aiask "download a file from this URL"
-aiask "check if google.com is reachable"
+aiask "show system uptime"
 ```
 
-### Interactive Options
+**Git Operations:**
+```bash
+aiask "undo my last commit but keep the changes"
+aiask "show commits from the last week"
+aiask "create a new branch called feature-login"
+aiask "squash the last 3 commits"
+```
 
-After AIask suggests a command, you can:
+**Networking:**
+```bash
+aiask "list all open ports"
+aiask "download this file from URL"
+aiask "check if google.com is reachable"
+aiask "show my network interfaces"
+```
+
+### ⌨️ Interactive Options
+
+After AIask suggests a command:
 
 | Key | Action |
 |-----|--------|
-| `e` | **Execute** - Run the command immediately |
-| `c` | **Copy** - Copy to clipboard |
-| `d` | **Edit** - Modify the command before running |
-| `r` | **Re-prompt** - Ask a different question |
-| `q` | **Quit** - Exit without action |
+| `e` | ▶️ **Execute** — Run the command now |
+| `c` | 📋 **Copy** — Copy to clipboard |
+| `d` | ✏️ **Edit** — Modify before running |
+| `r` | 🔄 **Re-prompt** — Ask something different |
+| `q` | 👋 **Quit** — Exit without action |
 
-## Configuration File
+---
 
-AIask stores configuration in `~/.aiask/config.yaml`:
+## 📁 Configuration File
+
+AIask stores your settings in `~/.aiask/config.yaml`:
 
 ```yaml
 provider: grok
 api_key: "xai-..."
 model: "grok-3"
-ollama_url: "http://localhost:11434"
+ollama_url: "http://localhost:11434"  # Only for Ollama
 ```
 
-### Supported Models
+### 🤖 Supported Models
 
-| Provider | Default Model | Other Options |
-|----------|---------------|---------------|
+| Provider | Default | Other Options |
+|----------|---------|---------------|
 | Grok | grok-3 | grok-2 |
 | OpenAI | gpt-4o | gpt-4o-mini, gpt-4-turbo |
-| Anthropic | claude-sonnet-4-20250514 | claude-3-5-sonnet-20241022, claude-3-opus |
+| Anthropic | claude-sonnet-4-20250514 | claude-3-opus |
 | Gemini | gemini-2.0-flash | gemini-1.5-pro |
 | Ollama | llama3.2 | mistral, codellama, phi |
 
-## Shell Detection
+---
 
-AIask automatically detects your current shell and tailors commands accordingly:
+## 🐚 Shell Detection
 
-- **Windows**: PowerShell, Command Prompt (CMD)
-- **macOS/Linux**: Bash, Zsh, Fish
+AIask automatically detects your shell and generates appropriate commands:
 
-The detection uses environment variables (`PSModulePath`, `SHELL`, `COMSPEC`) to identify the active shell.
+| Platform | Shells Detected |
+|----------|-----------------|
+| Windows | PowerShell, CMD |
+| macOS/Linux | Bash, Zsh, Fish |
 
-## Building from Source
+---
+
+## 🔨 Building from Source
 
 ### Prerequisites
-
-- Go 1.23 or later
-- Make (optional, for using Makefile)
+- Go 1.23+
+- Make (optional)
 
 ### Build Commands
 
 ```bash
-# Build for current platform
-make build
-
-# Build for all platforms
-make build-all
-
-# Create release archives
-make release
+make build        # Build for current platform
+make build-all    # Build for all platforms
+make release      # Create release archives
 ```
 
 ### Cross-Compilation
@@ -228,39 +257,57 @@ GOOS=linux GOARCH=amd64 go build -o aiask ./cmd/aiask
 GOOS=darwin GOARCH=arm64 go build -o aiask ./cmd/aiask
 ```
 
-## Troubleshooting
+---
 
-### "Config not found" Error
+## 🔧 Troubleshooting
 
-Run `aiask config` to set up your configuration.
+### ❌ "Config not found" Error
+```bash
+aiask config  # Run the setup wizard
+```
 
-### API Errors
+### ❌ API Errors
+1. ✅ Verify your API key is correct
+2. ✅ Check you have credits/quota with your provider
+3. ✅ Ensure you're using a valid model name
 
-1. Verify your API key is correct
-2. Check you have credits/quota with your provider
-3. Ensure you're using a valid model name
+### ❌ Ollama Connection Issues
+```bash
+ollama serve    # Make sure Ollama is running
+ollama list     # Verify you have models installed
+```
 
-### Ollama Connection Issues
+### ❌ Command Not Executing
+Some commands need elevated privileges:
+- **Windows:** Run terminal as Administrator
+- **Linux/macOS:** Use `sudo`
 
-1. Ensure Ollama is running: `ollama serve`
-2. Check the URL in config matches Ollama's address
-3. Verify you have a model pulled: `ollama list`
+---
 
-### Command Not Executing
+## 🔒 Privacy & Security
 
-Some commands may require elevated privileges. Try running your terminal as Administrator (Windows) or with `sudo` (Linux/macOS).
+- 🔐 API keys stored locally in `~/.aiask/config.yaml`
+- 📤 Prompts are sent to your configured AI provider
+- 🏠 Use Ollama for 100% local, private inference
+- ✋ Commands never execute without your confirmation
 
-## Privacy & Security
+---
 
-- API keys are stored locally in `~/.aiask/config.yaml`
-- Your prompts are sent to the configured LLM provider
-- For maximum privacy, use Ollama for local inference
-- Commands are not executed without your explicit confirmation
+## 🤝 Contributing
 
-## Contributing
+Contributions are welcome! Feel free to:
+- 🐛 Report bugs
+- 💡 Suggest features
+- 🔧 Submit pull requests
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
-## License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/Hermithic">Hermithic</a>
+</p>
