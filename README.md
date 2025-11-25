@@ -36,13 +36,21 @@ brew tap Hermithic/aiask
 brew install aiask
 ```
 
-### Linux (Debian/Ubuntu)
+### Linux
 
-Download the `.deb` package from the [releases page](https://github.com/Hermithic/aiask/releases):
+Download the binary from the [releases page](https://github.com/Hermithic/aiask/releases):
 
 ```bash
-wget https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask_1.0.0_amd64.deb
-sudo dpkg -i aiask_1.0.0_amd64.deb
+# Download and install
+wget https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-linux-amd64
+chmod +x aiask-linux-amd64
+sudo mv aiask-linux-amd64 /usr/local/bin/aiask
+
+# Or using the tar.gz
+wget https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-linux-amd64.tar.gz
+tar -xzf aiask-1.0.0-linux-amd64.tar.gz
+chmod +x aiask-linux-amd64
+sudo mv aiask-linux-amd64 /usr/local/bin/aiask
 ```
 
 ### From Source
