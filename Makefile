@@ -1,4 +1,4 @@
-# AIHelp CLI Makefile
+# AIask CLI Makefile
 # Cross-platform build script
 
 BINARY_NAME=aiask

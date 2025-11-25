@@ -12,7 +12,17 @@ Description: AI-powered command line assistant
  Features:
  - Natural language to command conversion
  - Multiple LLM provider support (Grok, OpenAI, Anthropic, Gemini, Ollama)
- - Auto-detect current shell
+ - Auto-detect current shell and OS
  - Execute, copy, edit, or re-prompt commands
+ .
+ New in v2.0:
+ - Command history with search
+ - Save and reuse prompt templates
+ - Explain mode - understand what commands do
+ - Interactive REPL mode
+ - Dangerous command warnings and undo suggestions
+ - Stdin support for piping output analysis
+ - JSON output for scripting
+ - Shell completions (Bash, Zsh, Fish)
+ - Environment variable configuration
 Homepage: https://github.com/Hermithic/aiask
-

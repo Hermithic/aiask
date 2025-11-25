@@ -8,7 +8,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/Hermithic/aiask/internal/safety"
 	"github.com/Hermithic/aiask/internal/shell"
+	"github.com/Hermithic/aiask/internal/undo"
 	"github.com/atotto/clipboard"
 )
 
@@ -30,6 +32,7 @@ const (
 	ColorYellow = "\033[33m"
 	ColorBlue   = "\033[34m"
 	ColorCyan   = "\033[36m"
+	ColorRed    = "\033[31m"
 	ColorBold   = "\033[1m"
 	ColorDim    = "\033[2m"
 )
@@ -48,6 +51,13 @@ func DisplayCommand(command string) {
 		}
 	}
 	fmt.Println()
+
+	// Check for dangerous commands and display warning
+	warning := safety.GetWarningMessage(command)
+	if warning != "" {
+		fmt.Println(warning)
+		fmt.Println()
+	}
 }
 
 // PromptAction prompts the user for an action
@@ -88,6 +98,30 @@ func PromptAction() Action {
 		fmt.Printf("%sInvalid option. Please try again.%s\n", ColorDim, ColorReset)
 		return PromptAction()
 	}
+}
+
+// PromptActionForCommand prompts the user for an action, with safety checks for the command
+func PromptActionForCommand(command string) Action {
+	action := PromptAction()
+
+	// If executing a dangerous command, require explicit confirmation
+	if action == ActionExecute && safety.RequiresConfirmation(command) {
+		fmt.Printf("%s%sThis is a potentially dangerous command. Type 'yes' to confirm: %s", ColorBold, ColorRed, ColorReset)
+
+		reader := bufio.NewReader(os.Stdin)
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return ActionQuit
+		}
+
+		input = strings.TrimSpace(strings.ToLower(input))
+		if input != "yes" {
+			fmt.Printf("%sExecution cancelled.%s\n", ColorYellow, ColorReset)
+			return ActionQuit
+		}
+	}
+
+	return action
 }
 
 // PromptEdit prompts the user to edit the command
@@ -164,7 +198,40 @@ func ExecuteCommand(command string, shellInfo shell.ShellInfo) error {
 	fmt.Printf("%s%sExecuting...%s\n", ColorDim, ColorYellow, ColorReset)
 	fmt.Println()
 
-	return cmd.Run()
+	err := cmd.Run()
+
+	// Show undo suggestion after execution
+	fmt.Println()
+	undoSuggestion := undo.GetUndoSuggestion(command)
+	if undoSuggestion.CanUndo {
+		fmt.Println(undo.FormatUndoSuggestion(undoSuggestion))
+	}
+
+	return err
+}
+
+// ExecuteCommandWithErrorRecovery executes a command and offers help if it fails
+func ExecuteCommandWithErrorRecovery(command string, shellInfo shell.ShellInfo) (error, bool) {
+	err := ExecuteCommand(command, shellInfo)
+
+	if err != nil {
+		fmt.Println()
+		fmt.Printf("%s%sCommand failed with error: %s%s\n", ColorRed, ColorBold, err.Error(), ColorReset)
+		fmt.Printf("%sWould you like help diagnosing this error? [y/N]: %s", ColorYellow, ColorReset)
+
+		reader := bufio.NewReader(os.Stdin)
+		input, readErr := reader.ReadString('\n')
+		if readErr != nil {
+			return err, false
+		}
+
+		input = strings.TrimSpace(strings.ToLower(input))
+		if input == "y" || input == "yes" {
+			return err, true // Signal that error recovery is requested
+		}
+	}
+
+	return err, false
 }
 
 // ShowError displays an error message
