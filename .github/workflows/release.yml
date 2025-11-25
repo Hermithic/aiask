@@ -14,88 +14,103 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.23'
 
       - name: Get version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Build all platforms
+      - name: Build binaries
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
+          mkdir -p build/release
           
-          # Build Windows
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X github.com/aihelp-cli/aihelp/internal/cli.Version=$VERSION" -o build/aihelp-windows-amd64.exe ./cmd/aihelp
-          GOOS=windows GOARCH=arm64 go build -ldflags "-s -w -X github.com/aihelp-cli/aihelp/internal/cli.Version=$VERSION" -o build/aihelp-windows-arm64.exe ./cmd/aihelp
+          # Windows
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X github.com/Hermithic/aiask/internal/cli.Version=$VERSION" -o build/aiask-windows-amd64.exe ./cmd/aiask
+          GOOS=windows GOARCH=arm64 go build -ldflags "-s -w -X github.com/Hermithic/aiask/internal/cli.Version=$VERSION" -o build/aiask-windows-arm64.exe ./cmd/aiask
           
-          # Build Linux
-          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X github.com/aihelp-cli/aihelp/internal/cli.Version=$VERSION" -o build/aihelp-linux-amd64 ./cmd/aihelp
-          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X github.com/aihelp-cli/aihelp/internal/cli.Version=$VERSION" -o build/aihelp-linux-arm64 ./cmd/aihelp
+          # Linux
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X github.com/Hermithic/aiask/internal/cli.Version=$VERSION" -o build/aiask-linux-amd64 ./cmd/aiask
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X github.com/Hermithic/aiask/internal/cli.Version=$VERSION" -o build/aiask-linux-arm64 ./cmd/aiask
           
-          # Build macOS
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X github.com/aihelp-cli/aihelp/internal/cli.Version=$VERSION" -o build/aihelp-darwin-amd64 ./cmd/aihelp
-          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X github.com/aihelp-cli/aihelp/internal/cli.Version=$VERSION" -o build/aihelp-darwin-arm64 ./cmd/aihelp
+          # macOS
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X github.com/Hermithic/aiask/internal/cli.Version=$VERSION" -o build/aiask-darwin-amd64 ./cmd/aiask
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X github.com/Hermithic/aiask/internal/cli.Version=$VERSION" -o build/aiask-darwin-arm64 ./cmd/aiask
 
       - name: Create archives
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
-          mkdir -p dist
+          cd build
           
-          # Windows
-          cd build && zip ../dist/aihelp-$VERSION-windows-amd64.zip aihelp-windows-amd64.exe && cd ..
-          cd build && zip ../dist/aihelp-$VERSION-windows-arm64.zip aihelp-windows-arm64.exe && cd ..
+          # Windows zips
+          zip release/aiask-$VERSION-windows-amd64.zip aiask-windows-amd64.exe
+          zip release/aiask-$VERSION-windows-arm64.zip aiask-windows-arm64.exe
           
-          # Linux
-          cd build && tar -czvf ../dist/aihelp-$VERSION-linux-amd64.tar.gz aihelp-linux-amd64 && cd ..
-          cd build && tar -czvf ../dist/aihelp-$VERSION-linux-arm64.tar.gz aihelp-linux-arm64 && cd ..
-          
-          # macOS
-          cd build && tar -czvf ../dist/aihelp-$VERSION-darwin-amd64.tar.gz aihelp-darwin-amd64 && cd ..
-          cd build && tar -czvf ../dist/aihelp-$VERSION-darwin-arm64.tar.gz aihelp-darwin-arm64 && cd ..
+          # Linux/macOS tarballs
+          tar -czvf release/aiask-$VERSION-linux-amd64.tar.gz aiask-linux-amd64
+          tar -czvf release/aiask-$VERSION-linux-arm64.tar.gz aiask-linux-arm64
+          tar -czvf release/aiask-$VERSION-darwin-amd64.tar.gz aiask-darwin-amd64
+          tar -czvf release/aiask-$VERSION-darwin-arm64.tar.gz aiask-darwin-arm64
 
-      - name: Build .deb package
+      - name: Build .deb packages
         run: |
           VERSION=${{ steps.version.outputs.VERSION }}
           
-          mkdir -p build/deb/aihelp_${VERSION}_amd64/DEBIAN
-          mkdir -p build/deb/aihelp_${VERSION}_amd64/usr/local/bin
+          # amd64
+          mkdir -p build/deb/aiask_${VERSION}_amd64/DEBIAN
+          mkdir -p build/deb/aiask_${VERSION}_amd64/usr/local/bin
+          cp build/aiask-linux-amd64 build/deb/aiask_${VERSION}_amd64/usr/local/bin/aiask
+          chmod 755 build/deb/aiask_${VERSION}_amd64/usr/local/bin/aiask
           
-          cp build/aihelp-linux-amd64 build/deb/aihelp_${VERSION}_amd64/usr/local/bin/aihelp
-          chmod +x build/deb/aihelp_${VERSION}_amd64/usr/local/bin/aihelp
-          
-          cat > build/deb/aihelp_${VERSION}_amd64/DEBIAN/control << EOF
-          Package: aihelp
-          Version: ${VERSION}
+          cat > build/deb/aiask_${VERSION}_amd64/DEBIAN/control << EOF
+          Package: aiask
+          Version: $VERSION
           Section: utils
           Priority: optional
           Architecture: amd64
-          Maintainer: AIHelp Contributors <aihelp@example.com>
+          Maintainer: Hermithic <hermithic@users.noreply.github.com>
           Description: AI-powered command line assistant
-           AIHelp converts natural language into shell commands
-           for PowerShell, CMD, Bash, and Zsh.
-          Homepage: https://github.com/aihelp-cli/aihelp
+           AIask converts natural language into shell commands for
+           PowerShell, CMD, Bash, and Zsh.
+          Homepage: https://github.com/Hermithic/aiask
           EOF
           
-          dpkg-deb --build build/deb/aihelp_${VERSION}_amd64
-          mv build/deb/aihelp_${VERSION}_amd64.deb dist/
+          dpkg-deb --build build/deb/aiask_${VERSION}_amd64
+          mv build/deb/aiask_${VERSION}_amd64.deb build/release/
+          
+          # arm64
+          mkdir -p build/deb/aiask_${VERSION}_arm64/DEBIAN
+          mkdir -p build/deb/aiask_${VERSION}_arm64/usr/local/bin
+          cp build/aiask-linux-arm64 build/deb/aiask_${VERSION}_arm64/usr/local/bin/aiask
+          chmod 755 build/deb/aiask_${VERSION}_arm64/usr/local/bin/aiask
+          
+          cat > build/deb/aiask_${VERSION}_arm64/DEBIAN/control << EOF
+          Package: aiask
+          Version: $VERSION
+          Section: utils
+          Priority: optional
+          Architecture: arm64
+          Maintainer: Hermithic <hermithic@users.noreply.github.com>
+          Description: AI-powered command line assistant
+           AIask converts natural language into shell commands for
+           PowerShell, CMD, Bash, and Zsh.
+          Homepage: https://github.com/Hermithic/aiask
+          EOF
+          
+          dpkg-deb --build build/deb/aiask_${VERSION}_arm64
+          mv build/deb/aiask_${VERSION}_arm64.deb build/release/
 
       - name: Generate checksums
         run: |
-          cd dist
+          cd build/release
           sha256sum * > checksums.txt
 
-      - name: Create Release
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            dist/*
+          files: build/release/*
           generate_release_notes: true
-          draft: false
-          prerelease: false
-

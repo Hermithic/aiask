@@ -1,0 +1,119 @@
+name: Update APT Repository
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  update-apt-repo:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release .deb files
+        run: |
+          mkdir -p apt-repo/pool/main
+          
+          # Get latest release
+          LATEST=$(curl -s https://api.github.com/repos/Hermithic/aiask/releases/latest | jq -r '.tag_name')
+          VERSION=${LATEST#v}
+          
+          # Download .deb files
+          curl -L -o apt-repo/pool/main/aiask_${VERSION}_amd64.deb \
+            "https://github.com/Hermithic/aiask/releases/download/${LATEST}/aiask_${VERSION}_amd64.deb" || true
+          curl -L -o apt-repo/pool/main/aiask_${VERSION}_arm64.deb \
+            "https://github.com/Hermithic/aiask/releases/download/${LATEST}/aiask_${VERSION}_arm64.deb" || true
+
+      - name: Generate APT repository
+        run: |
+          cd apt-repo
+          mkdir -p dists/stable/main/binary-amd64
+          mkdir -p dists/stable/main/binary-arm64
+          
+          # Generate Packages files
+          dpkg-scanpackages --arch amd64 pool/ > dists/stable/main/binary-amd64/Packages
+          dpkg-scanpackages --arch arm64 pool/ > dists/stable/main/binary-arm64/Packages
+          
+          gzip -k dists/stable/main/binary-amd64/Packages
+          gzip -k dists/stable/main/binary-arm64/Packages
+          
+          # Generate Release file
+          cat > dists/stable/Release << EOF
+          Origin: AIask
+          Label: AIask
+          Suite: stable
+          Codename: stable
+          Architectures: amd64 arm64
+          Components: main
+          Description: AIask APT Repository
+          EOF
+          
+          # Add checksums to Release
+          echo "MD5Sum:" >> dists/stable/Release
+          for f in dists/stable/main/binary-*/Packages*; do
+            echo " $(md5sum $f | cut -d' ' -f1) $(wc -c < $f) ${f#dists/stable/}" >> dists/stable/Release
+          done
+          
+          echo "SHA256:" >> dists/stable/Release
+          for f in dists/stable/main/binary-*/Packages*; do
+            echo " $(sha256sum $f | cut -d' ' -f1) $(wc -c < $f) ${f#dists/stable/}" >> dists/stable/Release
+          done
+
+      - name: Create index page
+        run: |
+          cat > apt-repo/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>AIask APT Repository</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+              code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
+              pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; overflow-x: auto; }
+            </style>
+          </head>
+          <body>
+            <h1>AIask APT Repository</h1>
+            <p>AI-powered command line assistant</p>
+            
+            <h2>Installation</h2>
+            <pre>
+          # Add the repository
+          echo "deb [trusted=yes] https://hermithic.github.io/aiask/ stable main" | sudo tee /etc/apt/sources.list.d/aiask.list
+
+          # Update and install
+          sudo apt update
+          sudo apt install aiask</pre>
+            
+            <h2>Links</h2>
+            <ul>
+              <li><a href="https://github.com/Hermithic/aiask">GitHub Repository</a></li>
+              <li><a href="https://github.com/Hermithic/aiask/releases">Releases</a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apt-repo
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
