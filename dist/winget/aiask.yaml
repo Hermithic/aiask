@@ -38,7 +38,7 @@ Installers:
   - Architecture: x64
     InstallerType: zip
     InstallerUrl: https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-windows-amd64.zip
-    InstallerSha256: # Will be filled during release
+    InstallerSha256: FB99F94458C362720CA4154FFEAF93A26C7227652A185CC9E01AE63321DEF78A
     NestedInstallerType: portable
     NestedInstallerFiles:
       - RelativeFilePath: aiask-windows-amd64.exe
@@ -46,7 +46,7 @@ Installers:
   - Architecture: arm64
     InstallerType: zip
     InstallerUrl: https://github.com/Hermithic/aiask/releases/download/v1.0.0/aiask-1.0.0-windows-arm64.zip
-    InstallerSha256: # Will be filled during release
+    InstallerSha256: 022F4FC4486F0102ACA5BD0C8CE48114810E98F7721F04194F7CBF2A4136F04E
     NestedInstallerType: portable
     NestedInstallerFiles:
       - RelativeFilePath: aiask-windows-arm64.exe
