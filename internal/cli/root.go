@@ -256,11 +256,29 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 		ctx, cancel := context.WithTimeout(context.Background(), cfg.GetTimeout())
 
 		startTime := time.Now()
-		if !jsonOutput {
-			fmt.Printf("\n%sGenerating command...%s\n", ui.ColorDim, ui.ColorReset)
-		}
+		var command string
+		var err error
 
-		command, err := provider.GenerateCommand(ctx, prompt, shellInfo)
+		// Use streaming if enabled and provider supports it
+		if streaming && llm.SupportsStreaming(provider) {
+			if !jsonOutput {
+				fmt.Printf("\n%sGenerating command...%s\n", ui.ColorDim, ui.ColorReset)
+			}
+			streamProvider := provider.(llm.StreamingProvider)
+			command, err = streamProvider.GenerateCommandStream(ctx, prompt, shellInfo, func(chunk string) {
+				if !jsonOutput {
+					fmt.Print(chunk)
+				}
+			})
+			if !jsonOutput && err == nil {
+				fmt.Println() // Add newline after streaming output
+			}
+		} else {
+			if !jsonOutput {
+				fmt.Printf("\n%sGenerating command...%s\n", ui.ColorDim, ui.ColorReset)
+			}
+			command, err = provider.GenerateCommand(ctx, prompt, shellInfo)
+		}
 		cancel()
 
 		if verbose {
@@ -277,7 +295,7 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 		}
 
 		// Clean up the command (remove any markdown code blocks if present)
-		command = cleanCommand(command)
+		command = llm.CleanCommand(command)
 
 		// JSON output mode - non-interactive
 		if jsonOutput {
@@ -290,7 +308,9 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 				Model:    cfg.Model,
 			}, nil)
 			// Record in history (not executed)
-			_ = history.AddEntry(prompt, command, string(shellInfo.Shell), false)
+			if err := history.AddEntry(prompt, command, string(shellInfo.Shell), false); err != nil && verbose {
+				fmt.Printf("%s[DEBUG] Failed to record history: %s%s\n", ui.ColorDim, err, ui.ColorReset)
+			}
 			return
 		}
 
@@ -304,7 +324,9 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 		case ui.ActionExecute:
 			execErr, wantsRecovery := ui.ExecuteCommandWithErrorRecovery(command, shellInfo)
 			// Record in history (executed)
-			_ = history.AddEntry(prompt, command, string(shellInfo.Shell), execErr == nil)
+			if histErr := history.AddEntry(prompt, command, string(shellInfo.Shell), execErr == nil); histErr != nil && verbose {
+				fmt.Printf("%s[DEBUG] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+			}
 
 			// If command failed and user wants help, generate a diagnostic prompt
 			if wantsRecovery && execErr != nil {
@@ -317,7 +339,9 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 		case ui.ActionCopy:
 			err := ui.CopyToClipboard(command)
 			// Record in history (not executed, just copied)
-			_ = history.AddEntry(prompt, command, string(shellInfo.Shell), false)
+			if histErr := history.AddEntry(prompt, command, string(shellInfo.Shell), false); histErr != nil && verbose {
+				fmt.Printf("%s[DEBUG] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+			}
 			if err != nil {
 				ui.ShowError(err)
 			}
@@ -333,7 +357,9 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 			case ui.ActionExecute:
 				execErr, wantsRecovery := ui.ExecuteCommandWithErrorRecovery(editedCommand, shellInfo)
 				// Record edited command in history
-				_ = history.AddEntry(prompt, editedCommand, string(shellInfo.Shell), execErr == nil)
+				if histErr := history.AddEntry(prompt, editedCommand, string(shellInfo.Shell), execErr == nil); histErr != nil && verbose {
+					fmt.Printf("%s[DEBUG] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+				}
 
 				if wantsRecovery && execErr != nil {
 					recoveryPrompt := fmt.Sprintf("The command '%s' failed with error: %s. How can I fix this?", editedCommand, execErr.Error())
@@ -343,7 +369,9 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 			case ui.ActionCopy:
 				err := ui.CopyToClipboard(editedCommand)
 				// Record edited command in history (not executed)
-				_ = history.AddEntry(prompt, editedCommand, string(shellInfo.Shell), false)
+				if histErr := history.AddEntry(prompt, editedCommand, string(shellInfo.Shell), false); histErr != nil && verbose {
+					fmt.Printf("%s[DEBUG] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+				}
 				if err != nil {
 					ui.ShowError(err)
 				}
@@ -364,24 +392,6 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 			return
 		}
 	}
-}
-
-// cleanCommand removes markdown code blocks and extra whitespace from the command
-func cleanCommand(command string) string {
-	// Remove markdown code blocks
-	command = strings.TrimPrefix(command, "```bash\n")
-	command = strings.TrimPrefix(command, "```powershell\n")
-	command = strings.TrimPrefix(command, "```cmd\n")
-	command = strings.TrimPrefix(command, "```shell\n")
-	command = strings.TrimPrefix(command, "```sh\n")
-	command = strings.TrimPrefix(command, "```\n")
-	command = strings.TrimSuffix(command, "\n```")
-	command = strings.TrimSuffix(command, "```")
-	
-	// Trim whitespace
-	command = strings.TrimSpace(command)
-	
-	return command
 }
 
 var versionCmd = &cobra.Command{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Hermithic/aiask/internal/config"
@@ -131,42 +132,7 @@ func (h *History) Search(query string) []Entry {
 
 // containsIgnoreCase checks if s contains substr (case-insensitive)
 func containsIgnoreCase(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		(s == substr || 
-		 len(substr) == 0 ||
-		 findIgnoreCase(s, substr) >= 0)
-}
-
-func findIgnoreCase(s, substr string) int {
-	if len(substr) == 0 {
-		return 0
-	}
-	if len(substr) > len(s) {
-		return -1
-	}
-	
-	// Simple case-insensitive search
-	sLower := toLower(s)
-	substrLower := toLower(substr)
-	
-	for i := 0; i <= len(sLower)-len(substrLower); i++ {
-		if sLower[i:i+len(substrLower)] == substrLower {
-			return i
-		}
-	}
-	return -1
-}
-
-func toLower(s string) string {
-	b := make([]byte, len(s))
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c >= 'A' && c <= 'Z' {
-			c += 'a' - 'A'
-		}
-		b[i] = c
-	}
-	return string(b)
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
 // AddEntry is a convenience function to add an entry and save

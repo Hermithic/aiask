@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Hermithic/aiask/internal/config"
 	appcontext "github.com/Hermithic/aiask/internal/context"
@@ -97,5 +98,23 @@ Rules:
 - Explain flags and options
 - Mention any potential risks or side effects
 - Keep explanations clear and concise`
+}
+
+// CleanCommand removes markdown code blocks and extra whitespace from the command
+func CleanCommand(command string) string {
+	// Remove markdown code blocks
+	command = strings.TrimPrefix(command, "```bash\n")
+	command = strings.TrimPrefix(command, "```powershell\n")
+	command = strings.TrimPrefix(command, "```cmd\n")
+	command = strings.TrimPrefix(command, "```shell\n")
+	command = strings.TrimPrefix(command, "```sh\n")
+	command = strings.TrimPrefix(command, "```\n")
+	command = strings.TrimSuffix(command, "\n```")
+	command = strings.TrimSuffix(command, "```")
+
+	// Trim whitespace
+	command = strings.TrimSpace(command)
+
+	return command
 }
 

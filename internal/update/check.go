@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -118,6 +119,20 @@ func truncateReleaseNotes(notes string, maxLen int) string {
 	return notes[:maxLen] + "..."
 }
 
+// getUpdateCommand returns the platform-specific update command
+func getUpdateCommand() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "winget upgrade Hermithic.aiask"
+	case "darwin":
+		return "brew upgrade aiask"
+	case "linux":
+		return "sudo apt update && sudo apt upgrade aiask"
+	default:
+		return "download from GitHub releases"
+	}
+}
+
 // FormatUpdateMessage formats a message about available update
 func FormatUpdateMessage(result *CheckResult) string {
 	if !result.UpdateAvailable {
@@ -127,10 +142,11 @@ func FormatUpdateMessage(result *CheckResult) string {
 	return fmt.Sprintf(
 		"\033[33m╔════════════════════════════════════════════╗\n"+
 			"║  Update available: %s → %s\n"+
-			"║  Run: \033[36mwinget upgrade Hermithic.aiask\033[33m\n"+
+			"║  Run: \033[36m%s\033[33m\n"+
 			"║  Or visit: %s\n"+
 			"╚════════════════════════════════════════════╝\033[0m\n",
 		result.CurrentVersion, result.LatestVersion,
+		getUpdateCommand(),
 		result.ReleaseURL,
 	)
 }

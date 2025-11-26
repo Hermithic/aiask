@@ -145,7 +145,7 @@ func (r *REPL) handlePrompt(prompt string) {
 	}
 
 	// Clean up the command
-	command = cleanCommand(command)
+	command = llm.CleanCommand(command)
 
 	// Display the command
 	ui.DisplayCommand(command)
@@ -156,11 +156,15 @@ func (r *REPL) handlePrompt(prompt string) {
 	switch action {
 	case ui.ActionExecute:
 		execErr, _ := ui.ExecuteCommandWithErrorRecovery(command, r.shellInfo)
-		_ = history.AddEntry(prompt, command, string(r.shellInfo.Shell), execErr == nil)
+		if histErr := history.AddEntry(prompt, command, string(r.shellInfo.Shell), execErr == nil); histErr != nil {
+			fmt.Printf("%s[REPL] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+		}
 
 	case ui.ActionCopy:
 		err := ui.CopyToClipboard(command)
-		_ = history.AddEntry(prompt, command, string(r.shellInfo.Shell), false)
+		if histErr := history.AddEntry(prompt, command, string(r.shellInfo.Shell), false); histErr != nil {
+			fmt.Printf("%s[REPL] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+		}
 		if err != nil {
 			ui.ShowError(err)
 		}
@@ -180,10 +184,14 @@ func (r *REPL) handlePrompt(prompt string) {
 		editAction := ui.PromptActionForCommand(edited)
 		if editAction == ui.ActionExecute {
 			execErr, _ := ui.ExecuteCommandWithErrorRecovery(edited, r.shellInfo)
-			_ = history.AddEntry(prompt, edited, string(r.shellInfo.Shell), execErr == nil)
+			if histErr := history.AddEntry(prompt, edited, string(r.shellInfo.Shell), execErr == nil); histErr != nil {
+				fmt.Printf("%s[REPL] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+			}
 		} else if editAction == ui.ActionCopy {
 			err := ui.CopyToClipboard(edited)
-			_ = history.AddEntry(prompt, edited, string(r.shellInfo.Shell), false)
+			if histErr := history.AddEntry(prompt, edited, string(r.shellInfo.Shell), false); histErr != nil {
+				fmt.Printf("%s[REPL] Failed to record history: %s%s\n", ui.ColorDim, histErr, ui.ColorReset)
+			}
 			if err != nil {
 				ui.ShowError(err)
 			}
@@ -243,18 +251,5 @@ func (r *REPL) showConfig() {
 func (r *REPL) clearScreen() {
 	fmt.Print("\033[H\033[2J")
 	r.printWelcome()
-}
-
-// cleanCommand removes markdown code blocks from the command
-func cleanCommand(command string) string {
-	command = strings.TrimPrefix(command, "```bash\n")
-	command = strings.TrimPrefix(command, "```powershell\n")
-	command = strings.TrimPrefix(command, "```cmd\n")
-	command = strings.TrimPrefix(command, "```shell\n")
-	command = strings.TrimPrefix(command, "```sh\n")
-	command = strings.TrimPrefix(command, "```\n")
-	command = strings.TrimSuffix(command, "\n```")
-	command = strings.TrimSuffix(command, "```")
-	return strings.TrimSpace(command)
 }
 

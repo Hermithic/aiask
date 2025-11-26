@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -159,7 +160,7 @@ func GetRecentCommits(n int) string {
 		return ""
 	}
 
-	cmd := exec.Command("git", "log", "--oneline", "-n", string(rune('0'+n)))
+	cmd := exec.Command("git", "log", "--oneline", "-n", strconv.Itoa(n))
 	output, err := cmd.Output()
 	if err != nil {
 		return ""

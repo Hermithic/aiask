@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/Hermithic/aiask/internal/safety"
 	"github.com/Hermithic/aiask/internal/shell"
@@ -253,7 +254,7 @@ func ShowSpinner(message string) func() {
 			default:
 				fmt.Printf("\r%s%s %s%s", ColorCyan, chars[i%len(chars)], message, ColorReset)
 				i++
-				// Small delay - this is a simple spinner
+				time.Sleep(100 * time.Millisecond)
 			}
 		}
 	}()
