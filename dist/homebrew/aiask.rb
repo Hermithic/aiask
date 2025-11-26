@@ -5,13 +5,13 @@
 class Aiask < Formula
   desc "AI-powered command line assistant - turn plain English into shell commands"
   homepage "https://github.com/Hermithic/aiask"
-  version "2.0.0"
+  version "2.0.1"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/Hermithic/aiask/releases/download/v2.0.0/aiask-2.0.0-darwin-arm64.tar.gz"
-      sha256 "af2486d283cd66a3db466b2f387994ece3dd91c83b1b0362aeea488af76f495b"
+      url "https://github.com/Hermithic/aiask/releases/download/v2.0.1/aiask-2.0.1-darwin-arm64.tar.gz"
+      sha256 "ee7eeeb1145eea6e990a46fc9de9c9e572943ee433dc16c4ac37f06664837ae2"
 
       def install
         bin.install "aiask-darwin-arm64" => "aiask"
@@ -20,8 +20,8 @@ class Aiask < Formula
         generate_completions_from_executable(bin/"aiask", "completion")
       end
     else
-      url "https://github.com/Hermithic/aiask/releases/download/v2.0.0/aiask-2.0.0-darwin-amd64.tar.gz"
-      sha256 "0c3458536cf5c78f4a70d4c3b7f9dd608255dcceaab38cdc2e15cc09ce728ed4"
+      url "https://github.com/Hermithic/aiask/releases/download/v2.0.1/aiask-2.0.1-darwin-amd64.tar.gz"
+      sha256 "a8afe66ac957b191fe1d200ab3f7d834c02e6bb9d3677ebf10cf9bb1cef628f2"
 
       def install
         bin.install "aiask-darwin-amd64" => "aiask"
@@ -34,8 +34,8 @@ class Aiask < Formula
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/Hermithic/aiask/releases/download/v2.0.0/aiask-2.0.0-linux-arm64.tar.gz"
-      sha256 "14025c11e6b4217390a5bad0c1149b901b6973897f006e42ed2fbd894b79c1c8"
+      url "https://github.com/Hermithic/aiask/releases/download/v2.0.1/aiask-2.0.1-linux-arm64.tar.gz"
+      sha256 "92e4dd7b9f3dacdbc11e8a04f0a0993d63f421f5d6ba3a6b28ae7faab983f7d0"
 
       def install
         bin.install "aiask-linux-arm64" => "aiask"
@@ -44,8 +44,8 @@ class Aiask < Formula
         generate_completions_from_executable(bin/"aiask", "completion")
       end
     else
-      url "https://github.com/Hermithic/aiask/releases/download/v2.0.0/aiask-2.0.0-linux-amd64.tar.gz"
-      sha256 "f18f4c2029d355bc737e1a562bf5247c6897c61dece43441ce8ed33fc2442562"
+      url "https://github.com/Hermithic/aiask/releases/download/v2.0.1/aiask-2.0.1-linux-amd64.tar.gz"
+      sha256 "d80eeb8c3b880b23bfce774a6652d88dfdcf45fcfb6f2780b92a98d4f733f053"
 
       def install
         bin.install "aiask-linux-amd64" => "aiask"
@@ -57,6 +57,6 @@ class Aiask < Formula
   end
 
   test do
-    assert_match "aiask version 2.0.0", shell_output("#{bin}/aiask version")
+    assert_match "aiask version 2.0.1", shell_output("#{bin}/aiask version")
   end
 end

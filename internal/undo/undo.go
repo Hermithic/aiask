@@ -55,9 +55,18 @@ var undoPatterns = []undoPattern{
 		Description: "Move the file back",
 	},
 	{
-		Pattern:     regexp.MustCompile(`^cp\s+(-[a-z]+\s+)?(\S+)\s+(\S+)$`),
-		UndoFunc:    func(m []string) string { return "rm " + m[3] },
-		Description: "Remove the copied file",
+		// Capture flags separately to handle recursive copies properly
+		Pattern: regexp.MustCompile(`^cp\s+(-[a-z]+)?\s*(\S+)\s+(\S+)$`),
+		UndoFunc: func(m []string) string {
+			flags := strings.TrimSpace(m[1])
+			dest := m[3]
+			// If recursive flag was used, use rm -r
+			if strings.Contains(flags, "r") || strings.Contains(flags, "R") {
+				return "rm -r " + dest
+			}
+			return "rm " + dest
+		},
+		Description: "Remove the copied file/directory",
 	},
 	{
 		Pattern:     regexp.MustCompile(`^mkdir\s+(-p\s+)?(\S+)$`),
@@ -87,8 +96,14 @@ var undoPatterns = []undoPattern{
 		Description: "Uninstall the package",
 	},
 	{
-		Pattern:     regexp.MustCompile(`^npm\s+install\s+(-[gG]\s+)?(.+)$`),
-		UndoFunc:    func(m []string) string { return "npm uninstall " + m[1] + m[2] },
+		// Capture -g/-G flag separately without trailing space for cleaner output
+		Pattern: regexp.MustCompile(`^npm\s+install\s+(-[gG])?\s*(.+)$`),
+		UndoFunc: func(m []string) string {
+			if m[1] != "" {
+				return "npm uninstall " + m[1] + " " + strings.TrimSpace(m[2])
+			}
+			return "npm uninstall " + strings.TrimSpace(m[2])
+		},
 		Description: "Uninstall the package",
 	},
 	{

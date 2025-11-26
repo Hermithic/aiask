@@ -175,6 +175,7 @@ func runTemplatesRun(cmd *cobra.Command, args []string) {
 		ui.ShowError(fmt.Errorf("failed to create LLM provider: %w", err))
 		return
 	}
+	defer llm.CloseProvider(provider)
 
 	fmt.Printf("%sRunning template '%s': %s%s\n", ui.ColorDim, name, tmpl.Prompt, ui.ColorReset)
 

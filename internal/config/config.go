@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hermithic/aiask/internal/fileutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -184,18 +185,8 @@ func applyEnvOverrides(cfg *Config) {
 	}
 }
 
-// Save saves the configuration to the config file
+// Save saves the configuration to the config file atomically to prevent corruption
 func Save(cfg *Config) error {
-	configDir, err := GetConfigDir()
-	if err != nil {
-		return err
-	}
-
-	// Create config directory if it doesn't exist
-	if err := os.MkdirAll(configDir, 0700); err != nil {
-		return fmt.Errorf("failed to create config directory: %w", err)
-	}
-
 	configPath, err := GetConfigPath()
 	if err != nil {
 		return err
@@ -206,7 +197,7 @@ func Save(cfg *Config) error {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(configPath, data, 0600); err != nil {
+	if err := fileutil.AtomicWriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

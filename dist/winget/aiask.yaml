@@ -3,7 +3,7 @@
 # Documentation: https://learn.microsoft.com/en-us/windows/package-manager/package/manifest
 
 PackageIdentifier: Hermithic.aiask
-PackageVersion: 2.0.0
+PackageVersion: 2.0.1
 PackageLocale: en-US
 Publisher: Hermithic
 PublisherUrl: https://github.com/Hermithic/aiask
@@ -53,39 +53,26 @@ Tags:
   - gemini
   - ollama
 ReleaseNotes: |
-  v2.0.0 - Major feature release
-  - Added explain command to describe what commands do
-  - Added command history with search
-  - Added templates system for saved prompts
-  - Added interactive REPL mode
-  - Added stdin support for piping input
-  - Added JSON output mode for scripting
-  - Added verbose/debug mode
-  - Added dangerous command detection and warnings
-  - Added undo suggestions after execution
-  - Added error recovery assistance
-  - Added shell completion scripts
-  - Added environment variable configuration
-  - Added configurable timeout
-  - Added custom system prompt suffix
-  - Added auto-update check on startup
-  - Added git context awareness
-ReleaseNotesUrl: https://github.com/Hermithic/aiask/releases/tag/v2.0.0
+  v2.0.1 - Release Artifact Fix
+  - Fixed release artifacts and distribution package configurations
+  - Updated Homebrew formula with correct checksums
+  - Fixed winget manifest structure for package submission
+ReleaseNotesUrl: https://github.com/Hermithic/aiask/releases/tag/v2.0.1
 ManifestType: singleton
 ManifestVersion: 1.4.0
 Installers:
   - Architecture: x64
     InstallerType: zip
-    InstallerUrl: https://github.com/Hermithic/aiask/releases/download/v2.0.0/aiask-2.0.0-windows-amd64.zip
-    InstallerSha256: F6A6339F3E9365FB57A675CD5F5B3BAE68099AA72B248FE3BE42223587A48058
+    InstallerUrl: https://github.com/Hermithic/aiask/releases/download/v2.0.1/aiask-2.0.1-windows-amd64.zip
+    InstallerSha256: DC4FDBB819D77DF9DE5D4B26BA2C8134AE4C09183ED3475F76EFA234DF0D8C53
     NestedInstallerType: portable
     NestedInstallerFiles:
       - RelativeFilePath: aiask-windows-amd64.exe
         PortableCommandAlias: aiask
   - Architecture: arm64
     InstallerType: zip
-    InstallerUrl: https://github.com/Hermithic/aiask/releases/download/v2.0.0/aiask-2.0.0-windows-arm64.zip
-    InstallerSha256: AFC39D7C775B143007C0DE2F2F2364BA245BA4FE8E5689ACB958F659DA3020BF
+    InstallerUrl: https://github.com/Hermithic/aiask/releases/download/v2.0.1/aiask-2.0.1-windows-arm64.zip
+    InstallerSha256: 661A181EDB10B5E2E6611E002F003E1DAE625D024748A6177F229A3D3B780893
     NestedInstallerType: portable
     NestedInstallerFiles:
       - RelativeFilePath: aiask-windows-arm64.exe

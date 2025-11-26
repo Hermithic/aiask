@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -85,30 +86,135 @@ func CheckForUpdatesAsync(currentVersion string, callback func(*CheckResult)) {
 	}()
 }
 
-// isNewer compares version strings (simple comparison)
+// parseVersion splits a version string into its core version and pre-release parts
+// e.g., "2.0.0-beta.1" -> core: "2.0.0", prerelease: "beta.1"
+func parseVersion(version string) (core string, prerelease string) {
+	parts := strings.SplitN(version, "-", 2)
+	core = parts[0]
+	if len(parts) > 1 {
+		prerelease = parts[1]
+	}
+	return
+}
+
+// compareVersionCore compares two version core strings (e.g., "2.0.0" vs "2.1.0")
+// Returns: -1 if a < b, 0 if a == b, 1 if a > b
+func compareVersionCore(a, b string) int {
+	aParts := strings.Split(a, ".")
+	bParts := strings.Split(b, ".")
+
+	// Pad shorter version with zeros
+	maxLen := len(aParts)
+	if len(bParts) > maxLen {
+		maxLen = len(bParts)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		var aNum, bNum int
+		if i < len(aParts) {
+			fmt.Sscanf(aParts[i], "%d", &aNum)
+		}
+		if i < len(bParts) {
+			fmt.Sscanf(bParts[i], "%d", &bNum)
+		}
+
+		if aNum > bNum {
+			return 1
+		}
+		if aNum < bNum {
+			return -1
+		}
+	}
+	return 0
+}
+
+// comparePrerelease compares two pre-release strings using semantic versioning rules
+// Each dot-separated part is compared numerically if both are numbers, otherwise lexicographically
+// Returns: -1 if a < b, 0 if a == b, 1 if a > b
+func comparePrerelease(a, b string) int {
+	aParts := strings.Split(a, ".")
+	bParts := strings.Split(b, ".")
+
+	maxLen := len(aParts)
+	if len(bParts) > maxLen {
+		maxLen = len(bParts)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		// If one has fewer parts, it comes first (per semver spec)
+		if i >= len(aParts) {
+			return -1
+		}
+		if i >= len(bParts) {
+			return 1
+		}
+
+		aPart := aParts[i]
+		bPart := bParts[i]
+
+		// Try to parse both as numbers
+		aNum, aErr := strconv.Atoi(aPart)
+		bNum, bErr := strconv.Atoi(bPart)
+
+		if aErr == nil && bErr == nil {
+			// Both are numeric, compare as numbers
+			if aNum > bNum {
+				return 1
+			}
+			if aNum < bNum {
+				return -1
+			}
+		} else if aErr == nil {
+			// a is numeric, b is not - numeric comes first per semver
+			return -1
+		} else if bErr == nil {
+			// b is numeric, a is not - numeric comes first per semver
+			return 1
+		} else {
+			// Both are strings, compare lexicographically
+			if aPart > bPart {
+				return 1
+			}
+			if aPart < bPart {
+				return -1
+			}
+		}
+	}
+
+	return 0
+}
+
+// isNewer compares version strings with support for pre-release versions
+// Follows semantic versioning: release versions are newer than pre-release versions
+// e.g., 2.0.0 > 2.0.0-beta.1, 2.0.0-beta.2 > 2.0.0-beta.1, 2.0.0-beta.10 > 2.0.0-beta.2
 func isNewer(latest, current string) bool {
 	if current == "dev" || current == "" {
 		return false
 	}
 
-	// Simple version comparison (works for semver-like versions)
-	latestParts := strings.Split(latest, ".")
-	currentParts := strings.Split(current, ".")
+	latestCore, latestPrerelease := parseVersion(latest)
+	currentCore, currentPrerelease := parseVersion(current)
 
-	for i := 0; i < len(latestParts) && i < len(currentParts); i++ {
-		var latestNum, currentNum int
-		fmt.Sscanf(latestParts[i], "%d", &latestNum)
-		fmt.Sscanf(currentParts[i], "%d", &currentNum)
-
-		if latestNum > currentNum {
-			return true
-		}
-		if latestNum < currentNum {
-			return false
-		}
+	// Compare core versions first
+	coreComparison := compareVersionCore(latestCore, currentCore)
+	if coreComparison != 0 {
+		return coreComparison > 0
 	}
 
-	return len(latestParts) > len(currentParts)
+	// Core versions are equal, compare pre-release parts
+	// A release version (no prerelease) is newer than a pre-release version
+	if latestPrerelease == "" && currentPrerelease != "" {
+		return true // latest is a release, current is a pre-release
+	}
+	if latestPrerelease != "" && currentPrerelease == "" {
+		return false // latest is a pre-release, current is a release
+	}
+	if latestPrerelease == "" && currentPrerelease == "" {
+		return false // both are releases, same version
+	}
+
+	// Both have pre-release parts, compare them properly
+	return comparePrerelease(latestPrerelease, currentPrerelease) > 0
 }
 
 // truncateReleaseNotes truncates release notes to a maximum length

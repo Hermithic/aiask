@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/Hermithic/aiask/internal/shell"
 	"google.golang.org/genai"
@@ -13,6 +14,12 @@ type Gemini struct {
 	client             *genai.Client
 	model              string
 	systemPromptSuffix string
+}
+
+// Close releases resources associated with the Gemini client
+func (g *Gemini) Close() error {
+	// Note: genai.Client doesn't require explicit closing
+	return nil
 }
 
 // NewGemini creates a new Gemini provider
@@ -39,7 +46,7 @@ func NewGemini(apiKey, model, systemPromptSuffix string) (*Gemini, error) {
 
 // GenerateCommand generates a shell command using Google's Gemini API
 func (g *Gemini) GenerateCommand(ctx context.Context, prompt string, shellInfo shell.ShellInfo) (string, error) {
-	systemPrompt := BuildSystemPrompt(shellInfo, g.systemPromptSuffix)
+	systemPrompt := BuildSmartSystemPrompt(shellInfo, g.systemPromptSuffix, prompt)
 	fullPrompt := systemPrompt + "\n\nUser request: " + prompt
 
 	resp, err := g.client.Models.GenerateContent(ctx, g.model, genai.Text(fullPrompt), nil)
@@ -95,4 +102,36 @@ func (g *Gemini) ExplainCommand(ctx context.Context, command string) (string, er
 	}
 
 	return "", fmt.Errorf("no text response from API")
+}
+
+// GenerateCommandStream generates a shell command with streaming output
+func (g *Gemini) GenerateCommandStream(ctx context.Context, prompt string, shellInfo shell.ShellInfo, callback func(chunk string)) (string, error) {
+	systemPrompt := BuildSmartSystemPrompt(shellInfo, g.systemPromptSuffix, prompt)
+	fullPrompt := systemPrompt + "\n\nUser request: " + prompt
+
+	stream := g.client.Models.GenerateContentStream(ctx, g.model, genai.Text(fullPrompt), nil)
+
+	var fullContent string
+	for chunk, err := range stream {
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("streaming API request failed: %w", err)
+		}
+
+		// Extract text from the chunk
+		text, textErr := chunk.Text()
+		if textErr != nil {
+			continue // Skip chunks without text
+		}
+		if text != "" {
+			fullContent += text
+			if callback != nil {
+				callback(text)
+			}
+		}
+	}
+
+	return fullContent, nil
 }

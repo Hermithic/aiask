@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"time"
 
 	"github.com/Hermithic/aiask/internal/config"
+	"github.com/Hermithic/aiask/internal/fileutil"
 	"gopkg.in/yaml.v3"
 )
+
+// templateNameRegex validates template names (alphanumeric, dashes, underscores)
+var templateNameRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
 
 // Template represents a saved prompt template
 type Template struct {
@@ -59,20 +64,11 @@ func Load() (*Templates, error) {
 	return templates, nil
 }
 
-// Save saves the templates to the templates file
+// Save saves the templates to the templates file atomically to prevent corruption
 func (t *Templates) Save() error {
 	templatesPath, err := GetTemplatesPath()
 	if err != nil {
 		return err
-	}
-
-	// Ensure directory exists
-	configDir, err := config.GetConfigDir()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(configDir, 0700); err != nil {
-		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
 	data, err := yaml.Marshal(t)
@@ -80,20 +76,44 @@ func (t *Templates) Save() error {
 		return fmt.Errorf("failed to marshal templates: %w", err)
 	}
 
-	if err := os.WriteFile(templatesPath, data, 0600); err != nil {
+	if err := fileutil.AtomicWriteFile(templatesPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write templates file: %w", err)
 	}
 
 	return nil
 }
 
+// ValidateTemplateName validates a template name
+func ValidateTemplateName(name string) error {
+	if name == "" {
+		return fmt.Errorf("template name cannot be empty")
+	}
+	if len(name) > 50 {
+		return fmt.Errorf("template name cannot exceed 50 characters")
+	}
+	if !templateNameRegex.MatchString(name) {
+		return fmt.Errorf("template name must start with a letter and contain only letters, numbers, dashes, and underscores")
+	}
+	return nil
+}
+
 // Add adds a new template
 func (t *Templates) Add(name, prompt, description string) error {
+	// Validate the template name
+	if err := ValidateTemplateName(name); err != nil {
+		return err
+	}
+
 	// Check if template with same name exists
 	for _, tmpl := range t.Items {
 		if tmpl.Name == name {
 			return fmt.Errorf("template '%s' already exists", name)
 		}
+	}
+
+	// Validate prompt is not empty
+	if prompt == "" {
+		return fmt.Errorf("template prompt cannot be empty")
 	}
 
 	t.Items = append(t.Items, Template{

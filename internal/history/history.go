@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Hermithic/aiask/internal/config"
+	"github.com/Hermithic/aiask/internal/fileutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -62,20 +63,11 @@ func Load() (*History, error) {
 	return history, nil
 }
 
-// Save saves the history to the history file
+// Save saves the history to the history file atomically to prevent corruption
 func (h *History) Save() error {
 	historyPath, err := GetHistoryPath()
 	if err != nil {
 		return err
-	}
-
-	// Ensure directory exists
-	configDir, err := config.GetConfigDir()
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(configDir, 0700); err != nil {
-		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
 	data, err := yaml.Marshal(h)
@@ -83,7 +75,7 @@ func (h *History) Save() error {
 		return fmt.Errorf("failed to marshal history: %w", err)
 	}
 
-	if err := os.WriteFile(historyPath, data, 0600); err != nil {
+	if err := fileutil.AtomicWriteFile(historyPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write history file: %w", err)
 	}
 

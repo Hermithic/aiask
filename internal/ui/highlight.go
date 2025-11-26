@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -103,27 +102,6 @@ func (h *Highlighter) Highlight(command string) string {
 	}
 
 	return result.String()
-}
-
-// HighlightCommand applies syntax highlighting to a command for display
-func HighlightCommand(command string) string {
-	h := NewHighlighter()
-	return h.Highlight(command)
-}
-
-// DisplayCommandHighlighted shows the suggested command with syntax highlighting
-func DisplayCommandHighlighted(command string) {
-	fmt.Printf("\n%s%sSuggested command:%s\n\n", ColorBold, ColorCyan, ColorReset)
-
-	h := NewHighlighter()
-	lines := strings.Split(command, "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
-			highlighted := h.Highlight(line)
-			fmt.Printf("  %s\n", highlighted)
-		}
-	}
-	fmt.Println()
 }
 
 // FormatKeyword highlights a keyword

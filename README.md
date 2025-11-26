@@ -61,7 +61,7 @@ winget install Hermithic.aiask
 **Option 2: Direct download**
 ```powershell
 # Download the latest release
-Invoke-WebRequest -Uri "https://github.com/Hermithic/aiask/releases/latest/download/aiask-2.0.0-windows-amd64.zip" -OutFile aiask.zip
+Invoke-WebRequest -Uri "https://github.com/Hermithic/aiask/releases/latest/download/aiask-2.0.1-windows-amd64.zip" -OutFile aiask.zip
 Expand-Archive aiask.zip -DestinationPath .
 Move-Item aiask-windows-amd64.exe C:\Windows\aiask.exe
 ```
@@ -87,14 +87,14 @@ sudo apt install aiask
 
 **Option 2: Download .deb package**
 ```bash
-wget https://github.com/Hermithic/aiask/releases/latest/download/aiask_2.0.0_amd64.deb
-sudo dpkg -i aiask_2.0.0_amd64.deb
+wget https://github.com/Hermithic/aiask/releases/latest/download/aiask_2.0.1_amd64.deb
+sudo dpkg -i aiask_2.0.1_amd64.deb
 ```
 
 **Option 3: Direct binary**
 ```bash
-wget https://github.com/Hermithic/aiask/releases/latest/download/aiask-2.0.0-linux-amd64.tar.gz
-tar -xzf aiask-2.0.0-linux-amd64.tar.gz
+wget https://github.com/Hermithic/aiask/releases/latest/download/aiask-2.0.1-linux-amd64.tar.gz
+tar -xzf aiask-2.0.1-linux-amd64.tar.gz
 sudo mv aiask-linux-amd64 /usr/local/bin/aiask
 ```
 
@@ -544,6 +544,11 @@ MIT License — see [LICENSE](LICENSE) for details.
 ---
 
 ## 📝 Changelog
+
+### v2.0.1 (2025-11-26)
+- 🔧 Fixed release artifacts and distribution package configurations
+- 🔧 Updated Homebrew formula with correct checksums
+- 🔧 Fixed winget manifest structure for package submission
 
 ### v2.0.0 (2025-11-26)
 - ✨ Added `explain` command to describe what commands do

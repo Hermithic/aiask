@@ -39,10 +39,11 @@ func NewOpenAICompatible(apiKey, baseURL, model, systemPromptSuffix string) (*Op
 
 // GenerateCommand generates a shell command using an OpenAI-compatible API
 func (o *OpenAICompatible) GenerateCommand(ctx context.Context, prompt string, shellInfo shell.ShellInfo) (string, error) {
-	systemPrompt := BuildSystemPrompt(shellInfo, o.systemPromptSuffix)
+	systemPrompt := BuildSmartSystemPrompt(shellInfo, o.systemPromptSuffix, prompt)
 
 	resp, err := o.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Model: openai.ChatModel(o.model),
+		Model:     openai.ChatModel(o.model),
+		MaxTokens: openai.Int(500),
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage(prompt),
@@ -64,7 +65,8 @@ func (o *OpenAICompatible) ExplainCommand(ctx context.Context, command string) (
 	systemPrompt := BuildExplainPrompt()
 
 	resp, err := o.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-		Model: openai.ChatModel(o.model),
+		Model:     openai.ChatModel(o.model),
+		MaxTokens: openai.Int(1000),
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage(command),
@@ -83,10 +85,11 @@ func (o *OpenAICompatible) ExplainCommand(ctx context.Context, command string) (
 
 // GenerateCommandStream generates a shell command with streaming output
 func (o *OpenAICompatible) GenerateCommandStream(ctx context.Context, prompt string, shellInfo shell.ShellInfo, callback func(chunk string)) (string, error) {
-	systemPrompt := BuildSystemPrompt(shellInfo, o.systemPromptSuffix)
+	systemPrompt := BuildSmartSystemPrompt(shellInfo, o.systemPromptSuffix, prompt)
 
 	stream := o.client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Model: openai.ChatModel(o.model),
+		Model:     openai.ChatModel(o.model),
+		MaxTokens: openai.Int(500),
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemPrompt),
 			openai.UserMessage(prompt),

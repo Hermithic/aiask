@@ -18,6 +18,19 @@ type Provider interface {
 	ExplainCommand(ctx context.Context, command string) (string, error)
 }
 
+// Closeable is an optional interface for providers that hold resources
+type Closeable interface {
+	Close() error
+}
+
+// CloseProvider closes the provider if it implements Closeable
+func CloseProvider(p Provider) error {
+	if closer, ok := p.(Closeable); ok {
+		return closer.Close()
+	}
+	return nil
+}
+
 // StreamingProvider is an optional interface for providers that support streaming
 type StreamingProvider interface {
 	Provider
@@ -86,6 +99,35 @@ func BuildSystemPromptWithDirContext(shellInfo shell.ShellInfo, suffix string) s
 	if dirContext != "" {
 		prompt += "\n\n" + dirContext
 	}
+	return prompt
+}
+
+// BuildSmartSystemPrompt builds the system prompt with context tailored to the user's request
+// It includes directory or git context only when relevant to the prompt
+func BuildSmartSystemPrompt(shellInfo shell.ShellInfo, suffix string, userPrompt string) string {
+	prompt := BuildSystemPrompt(shellInfo, suffix)
+
+	// Add directory context if the prompt is file-related
+	if appcontext.IsFileRelatedPrompt(userPrompt) {
+		dirContext := appcontext.GetDirectoryContext()
+		if dirContext != "" {
+			prompt += "\n\n" + dirContext
+		}
+	}
+
+	// Add extended git context if the prompt is git-related
+	if appcontext.IsGitRelatedPrompt(userPrompt) {
+		gitStatus := appcontext.GetGitStatus()
+		if gitStatus != "" {
+			prompt += "\n\n" + gitStatus
+		}
+		// Add recent commits for context
+		recentCommits := appcontext.GetRecentCommits(5)
+		if recentCommits != "" {
+			prompt += "\nRecent commits:\n" + recentCommits
+		}
+	}
+
 	return prompt
 }
 

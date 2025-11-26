@@ -50,6 +50,7 @@ func runInteractive(cmd *cobra.Command, args []string) {
 		ui.ShowError(fmt.Errorf("failed to create LLM provider: %w", err))
 		os.Exit(1)
 	}
+	defer llm.CloseProvider(provider)
 
 	// Start REPL
 	r := repl.New(cfg, provider, shellInfo)

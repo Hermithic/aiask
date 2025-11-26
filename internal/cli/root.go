@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Hermithic/aiask/internal/config"
@@ -28,6 +29,10 @@ var (
 	jsonOutput bool
 	useStdin   bool
 	streaming  bool
+
+	// Update check result (stored to avoid race condition with main output)
+	pendingUpdateMessage string
+	pendingUpdateMu      sync.Mutex
 )
 
 // JSONOutput represents the JSON output format
@@ -83,7 +88,7 @@ func Execute() error {
 	return rootCmd.Execute()
 }
 
-// checkForUpdates checks for updates asynchronously and displays a message if available
+// checkForUpdates checks for updates asynchronously and stores the message for later display
 func checkForUpdates() {
 	// Load config to check if update checks are enabled
 	cfg, err := config.Load()
@@ -91,15 +96,25 @@ func checkForUpdates() {
 		return
 	}
 
-	// Check for updates in the background
+	// Check for updates in the background and store the message
 	update.CheckForUpdatesAsync(Version, func(result *update.CheckResult) {
 		if result.UpdateAvailable {
-			// Only print if we're not in JSON mode
-			if !jsonOutput {
-				fmt.Println(update.FormatUpdateMessage(result))
-			}
+			pendingUpdateMu.Lock()
+			pendingUpdateMessage = update.FormatUpdateMessage(result)
+			pendingUpdateMu.Unlock()
 		}
 	})
+}
+
+// printPendingUpdateMessage prints any pending update message
+func printPendingUpdateMessage() {
+	pendingUpdateMu.Lock()
+	msg := pendingUpdateMessage
+	pendingUpdateMu.Unlock()
+
+	if msg != "" && !jsonOutput {
+		fmt.Println(msg)
+	}
 }
 
 func runMain(cmd *cobra.Command, args []string) {
@@ -146,6 +161,7 @@ func runMain(cmd *cobra.Command, args []string) {
 		}
 		os.Exit(1)
 	}
+	defer llm.CloseProvider(provider)
 
 	// Join args into a single prompt
 	prompt := strings.Join(args, " ")
@@ -196,7 +212,23 @@ func readStdin() string {
 		line, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				content.WriteString(line)
+				// Check if adding this line would exceed the limit
+				if bytesRead+len(line) > maxStdinBytes {
+					remaining := maxStdinBytes - bytesRead
+					if remaining > 0 {
+						content.WriteString(line[:remaining])
+					}
+				} else {
+					content.WriteString(line)
+				}
+			}
+			break
+		}
+		// Check if adding this line would exceed the limit
+		if bytesRead+len(line) > maxStdinBytes {
+			remaining := maxStdinBytes - bytesRead
+			if remaining > 0 {
+				content.WriteString(line[:remaining])
 			}
 			break
 		}
@@ -206,9 +238,9 @@ func readStdin() string {
 
 	result := strings.TrimSpace(content.String())
 
-	// Truncate if too long
-	if len(result) > maxStdinBytes {
-		result = result[:maxStdinBytes] + "\n... (truncated)"
+	// Add truncation notice if we hit the limit
+	if bytesRead >= maxStdinBytes {
+		result = result + "\n... (truncated)"
 	}
 
 	return result
@@ -290,6 +322,7 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 				outputJSON(JSONOutput{Prompt: prompt}, fmt.Errorf("failed to generate command: %w", err))
 			} else {
 				ui.ShowError(fmt.Errorf("failed to generate command: %w", err))
+				printPendingUpdateMessage()
 			}
 			return
 		}
@@ -334,6 +367,7 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 				prompt = recoveryPrompt
 				continue
 			}
+			printPendingUpdateMessage()
 			return
 
 		case ui.ActionCopy:
@@ -345,6 +379,7 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 			if err != nil {
 				ui.ShowError(err)
 			}
+			printPendingUpdateMessage()
 			return
 
 		case ui.ActionEdit:
@@ -376,12 +411,14 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 					ui.ShowError(err)
 				}
 			}
+			printPendingUpdateMessage()
 			return
 
 		case ui.ActionReprompt:
 			newPrompt := ui.PromptReprompt()
 			if newPrompt == "" {
 				fmt.Println("No new prompt provided. Exiting.")
+				printPendingUpdateMessage()
 				return
 			}
 			prompt = newPrompt
@@ -389,6 +426,7 @@ func runInteractionLoop(provider llm.Provider, prompt string, shellInfo shell.Sh
 
 		case ui.ActionQuit:
 			fmt.Println("Goodbye!")
+			printPendingUpdateMessage()
 			return
 		}
 	}

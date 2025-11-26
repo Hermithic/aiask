@@ -46,6 +46,7 @@ func runExplain(cmd *cobra.Command, args []string) {
 		ui.ShowError(fmt.Errorf("failed to create LLM provider: %w", err))
 		os.Exit(1)
 	}
+	defer llm.CloseProvider(provider)
 
 	if verbose {
 		fmt.Printf("%s[DEBUG] Command to explain: %s%s\n", ui.ColorDim, command, ui.ColorReset)
